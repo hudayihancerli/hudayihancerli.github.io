@@ -1,0 +1,65 @@
+.button{
+    display: flex;
+    gap: 1rem;
+    width: fit-content;
+    color: rgb(130, 225, 238);
+    padding: 1rem;
+    border-bottom: 0.3rem solid rgb(130, 225, 238);
+    background-color:rgba(133, 196, 216,0.5);
+}
+
+
+.button:hover{
+    background-color:rgba(6, 187, 243, 0.7);
+    padding-inline: 3rem;
+    transition: 1s;
+}
+
+.navbar{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media screen and (max-width:800px) {
+    .navbar{
+        display: block;
+        align-items: center;
+        justify-content:center;
+        bottom: 0;
+    }
+
+}
+
+main{
+    padding: 4rem 16vw ;
+}
+
+.info .text{
+    font-size: 8vw;
+    margin-bottom: 2rem;
+}
+
+.info .socialMedia a{
+    padding: .4rem;
+    font-size: 2vw;
+    color: rgb(193, 210, 213);
+    text-shadow: 1px 1px 3px snow;
+}
+
+.info .socialMedia a:hover{
+    text-shadow: 2px 2px 12px snow;
+}
+
+@media screen and (max-width:800px) {
+    .info .socialMedia{
+        display: flex;
+        flex-wrap: wrap;
+    }
+    .info .socialMedia a{
+        font-size: 6vw;
+        color: rgb(193, 210, 213);
+        text-shadow: 1px 1px 3px snow;
+    }    
+
+}
