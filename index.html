@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-L86XPY1GBK"></script>
     <script type="text/javascript">
         (function (c, l, a, r, i, t, y) {
@@ -17,12 +18,24 @@
             y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
         })(window, document, "clarity", "script", "rm7y4c88t4");
     </script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1 class="text" id="statusText">Şu anda buradasınız.</h1>
-        <div class="circle" id="clickableCircle"></div>
-    </div>
+    <div id="home">
+  <div id="statusText">Şu anda buradasınız.</div>
+  <div id="clickableCircle">Başlat</div>
+</div>
+
+<div id="mapWrap">
+  <div id="hud">
+    Tuşlar: W/A/S/D = Hareket | Q = Al | E = Bırak
+    <span>Taşıdığın: <span id="holding">Yok</span></span>
+    <span id="playerPos">Konum: 0,0</span>
+    <span id="nearestItem">En yakın nesne: Yok</span>
+  </div>
+  <div id="map"></div>
+</div>
+
     <script src="script.js"></script>
     <script type="text/javascript"></script>
 
