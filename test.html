@@ -1,345 +1,171 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>hudayihancerli</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-  <!-- Analytics (istersen kaldır) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-L86XPY1GBK"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-L86XPY1GBK');
-    (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "rm7y4c88t4");
-  </script>
-  <style>
-    :root { --bg:#f0f0f0; --text:#333; --accent:#ff0000; }
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; margin:0; }
-    body{
-      display:flex; justify-content:center; align-items:center;
-      font-family:'Montserrat',Arial,sans-serif; background:var(--bg); overflow:hidden;
-    }
-    .container{ text-align:center; padding:20px; }
-    .text{ font-size:2.5em; font-weight:700; color:var(--text); margin-bottom:20px; user-select:none; transition:color .3s; }
-    .circle{
-      width:80px; height:80px; background:var(--accent); border-radius:50%; margin:0 auto; cursor:pointer;
-      box-shadow:inset 0 4px 8px rgba(0,0,0,.4);
-      transition:transform .2s ease-in-out, box-shadow .2s ease-in-out;
-    }
-    .circle:hover{ transform:scale(1.1); }
-    .circle:active{ transform:scale(.95); }
-    @keyframes pulse{ 0%{transform:scale(1)} 50%{transform:scale(1.15)} 100%{transform:scale(1)} }
-    .pulse-animation{ animation:pulse .45s ease-in-out; }
-
-    /* Oyun ekranı (tam ekran) */
-    #gameWrap{ position:fixed; inset:0; display:none; background:linear-gradient(#fafafa,#e6e6e6); }
-    #hud{
-      position:absolute; top:10px; left:50%; transform:translateX(-50%);
-      display:flex; gap:18px; padding:8px 14px; background:#ffffffcc; border-radius:12px; font-weight:700;
-      backdrop-filter: blur(4px);
-    }
-    #hud .pill{ padding:2px 8px; border-radius:999px; background:#00000010; }
-    #gameCanvas{ display:block; width:100vw; height:100vh; }
-    #overlay{
-      position:absolute; inset:0; display:none; place-items:center; background:rgba(0,0,0,.56); color:#fff; text-align:center;
-    }
-    .card{ background:#1b1b1b; padding:22px 26px; border-radius:16px; min-width:260px; box-shadow:0 12px 32px rgba(0,0,0,.4); }
-    .card h2{ margin:0 0 6px 0; }
-    .btn{
-      margin-top:12px; padding:10px 16px; border:0; border-radius:10px; background:#ff4747; color:#fff; font-weight:700; cursor:pointer;
-    }
-    .btn:hover{ filter:brightness(1.06); }
-    #backHome{
-      position:absolute; bottom:14px; left:50%; transform:translateX(-50%); text-decoration:underline; cursor:pointer; color:#333;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keşif Oyunu - Geliştirilmiş</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<style>
+html,body{margin:0;padding:0;height:100%;overflow:hidden;font-family:'Montserrat',sans-serif;background:#121212;}
+#home{height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff;}
+#statusText{font-size:2.5rem;font-weight:700;margin-bottom:20px;}
+#clickableCircle{width:140px;height:140px;border-radius:50%;background:#ff3b3b;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;transition:transform .2s;font-size:1.2rem;}
+#clickableCircle:hover{transform:scale(1.1);}
+#mapWrap{display:none;width:100vw;height:100vh;position:relative;}
+#hud{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:#fff;padding:8px 12px;border-radius:12px;z-index:100;font-weight:700;}
+#collection{position:absolute;top:50px;right:10px;width:220px;background:rgba(0,0,0,0.7);padding:10px;border-radius:10px;color:#fff;z-index:100;font-size:0.9rem;max-height:70vh;overflow-y:auto;}
+#collection h3{margin:0 0 6px 0;font-size:1rem;text-align:center;}
+</style>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
 
-  <!-- Giriş ekranı (ilk attığın tasarıma sadık) -->
-  <div class="container" id="home">
-    <h1 class="text" id="statusText">Şu anda buradasınız.</h1>
-    <div class="circle" id="startBtn" title="Tıkla ve oyunu başlat"></div>
+<div id="home">
+  <div id="statusText">Şu anda buradasınız.</div>
+  <div id="clickableCircle">Başlat</div>
+</div>
+
+<div id="mapWrap">
+  <div id="hud">Taşıdığın: <span id="holding">Yok</span></div>
+  <div id="collection">
+    <h3>Koleksiyon</h3>
+    <ul id="collectionList"></ul>
   </div>
+  <div id="map" style="width:100%;height:100%;"></div>
+</div>
 
-  <!-- Oyun ekranı -->
-  <div id="gameWrap" aria-hidden="true">
-    <div id="hud">
-      <div class="pill">Level: <span id="level">1</span></div>
-      <div class="pill">Skor: <span id="score">0</span></div>
-      <div class="pill">Kalan: <span id="left">0</span></div>
-      <div class="pill">Can: <span id="lives">3</span></div>
-      <div class="pill">Kontrol: WASD / Ok Tuşları (Shift = koş)</div>
-    </div>
-    <canvas id="gameCanvas" width="1280" height="720"></canvas>
-    <div id="overlay">
-      <div class="card">
-        <h2 id="ovTitle">Oyun Bitti</h2>
-        <p id="ovDesc">Skorun: <b id="finalScore">0</b></p>
-        <button class="btn" id="ovAction">Tekrar Oyna</button>
-      </div>
-    </div>
-    <div id="backHome">Ana ekrana dön</div>
-  </div>
+<script>
+const startBtn=document.getElementById('clickableCircle');
+const home=document.getElementById('home');
+const mapWrap=document.getElementById('mapWrap');
+const hudHolding=document.getElementById('holding');
+const collectionList=document.getElementById('collectionList');
 
-  <script>
-    // --- Ekran geçişleri ---
-    const home = document.getElementById('home');
-    const startBtn = document.getElementById('startBtn');
-    const statusText = document.getElementById('statusText');
-    const gameWrap = document.getElementById('gameWrap');
-    const backHome = document.getElementById('backHome');
+let map, playerMarker, holding=null;
+let keys={w:false,s:false,a:false,d:false};
+let spacePressed=false;
+const PICKUP_RADIUS = 0.004;
+const ITEM_RADIUS = 0.003;
 
-    startBtn.addEventListener('click', ()=>{
-      statusText.textContent = "Yükleniyor...";
-      startBtn.classList.add('pulse-animation');
-      setTimeout(()=>{
-        home.style.display='none';
-        gameWrap.style.display='block';
-        startGame();
-      }, 450);
-    });
-    backHome.addEventListener('click', ()=>{
-      stopGame();
-      gameWrap.style.display='none';
-      startBtn.classList.remove('pulse-animation');
-      statusText.textContent = "Şu anda buradasınız.";
-      home.style.display='block';
-    });
+let geoData=[
+  {id:"item1",type:"Star",color:"gold",coords:[41.037,28.996],target:[41.015137,28.979530],collected:false},
+  {id:"item2",type:"Heart",color:"red",coords:[41.035,28.998],target:[41.016,28.981],collected:false},
+  {id:"item3",type:"Diamond",color:"blue",coords:[40.744,29.950],target:[40.743,29.948],collected:false},
+  {id:"item4",type:"Circle",color:"purple",coords:[40.748,29.952],target:[40.750,29.950],collected:false}
+];
 
-    // --- Oyun değişkenleri ---
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d', { alpha:false });
+// LocalStorage yükleme
+try{
+  let saved=localStorage.getItem('geoItems');
+  if(saved){
+    let parsed=JSON.parse(saved);
+    if(Array.isArray(parsed)) geoData=parsed;
+  }
+}catch(e){ console.warn('LocalStorage veri yüklenemedi, varsayılan objeler kullanılıyor.', e); }
 
-    const levelEl = document.getElementById('level');
-    const scoreEl = document.getElementById('score');
-    const leftEl  = document.getElementById('left');
-    const livesEl = document.getElementById('lives');
+startBtn.addEventListener('click',()=>{
+  home.style.display='none';
+  mapWrap.style.display='block';
+  initMap();
+});
 
-    const overlay = document.getElementById('overlay');
-    const ovTitle = document.getElementById('ovTitle');
-    const ovDesc  = document.getElementById('ovDesc');
-    const ovAction= document.getElementById('ovAction');
+function initMap(){
+  map=L.map('map',{zoomControl:false,scrollWheelZoom:false,dragging:false,doubleClickZoom:false,boxZoom:false,touchZoom:false,keyboard:false})
+         .setView([41.015137,28.979530],12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  playerMarker=L.circleMarker([41.015137,28.979530],{radius:16,color:'red',fillColor:'red',fillOpacity:1}).addTo(map);
 
-    // Responsive: canvas'ı pencereye sığdır (oran koru değil, tam ekran)
-    function fitCanvas(){
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', fitCanvas);
-
-    // Oyun objeleri
-    const player = { x:0, y:0, r:20, base:0.26, run:0.42, color:'#ff2d2d' }; // Buton ≈ kırmızı karakter
-    const monsters = []; // {x,y,r,spd}
-    const coins = [];    // {x,y,r}
-    const walls = [];    // isteğe bağlı engeller için (şimdilik boş, açık dünya)
-
-    let keys = new Set();
-    let running=false, last=0, score=0, level=1, lives=3;
-
-    // Girdi
-    function mapKey(c){ return ({
-      ArrowLeft:'L',ArrowRight:'R',ArrowUp:'U',ArrowDown:'D',
-      KeyA:'L',KeyD:'R',KeyW:'U',KeyS:'D',
-      ShiftLeft:'SHIFT',ShiftRight:'SHIFT'
-    })[c];}
-    addEventListener('keydown', e=>{ const k=mapKey(e.code); if(k){ keys.add(k); e.preventDefault(); }});
-    addEventListener('keyup',   e=>{ const k=mapKey(e.code); if(k){ keys.delete(k); e.preventDefault(); }});
-
-    // Başlat / Bitir
-    function startGame(){
-      fitCanvas();
-      // Oyuncuyu merkeze koy
-      player.x = canvas.width/2; player.y = canvas.height/2;
-      // Level & durum
-      score = 0; level = 1; lives = 3;
-      initLevel(level);
-      updateHud();
-      overlay.style.display='none';
-      running = true; last=0; loop();
-    }
-    function stopGame(){ running=false; cancelAnimationFrame(_raf); }
-
-    // Level kur
-    function initLevel(n){
-      monsters.length = 0;
-      coins.length = 0;
-
-      // Coin sayısı ve canavar sayısı level'a göre
-      const coinCount = 10 + (n-1)*4;
-      const monsterCount = Math.min(1 + Math.floor((n-1)/1.2), 10);
-
-      // Coin’ler
-      for(let i=0;i<coinCount;i++){
-        coins.push(spawnCoin());
+  geoData.forEach(f=>{
+    // Çakışma kontrolü
+    for(let other of geoData){
+      if(other.id !== f.id && dist(f.coords[0],f.coords[1],other.coords[0],other.coords[1])<ITEM_RADIUS){
+        f.coords[0] += ITEM_RADIUS; f.coords[1] += ITEM_RADIUS;
       }
-      // Canavarlar
-      for(let i=0;i<monsterCount;i++){
-        monsters.push(spawnMonster());
-      }
-      updateHud();
     }
+    f.marker=L.circleMarker(f.coords,{radius:12,color:f.color,fillColor:f.color,fillOpacity:0.9}).addTo(map)
+          .bindTooltip(f.type,{permanent:true,direction:'top'});
+    f.targetMarker=L.circleMarker(f.target,{radius:10,color:'lime',fillColor:'lime',fillOpacity:0.6}).addTo(map)
+          .bindTooltip(`Hedef: ${f.type}`,{permanent:true,direction:'bottom'});
+  });
 
-    function spawnCoin(){
-      const margin = 40;
-      let x = margin + Math.random()*(canvas.width - margin*2);
-      let y = margin + Math.random()*(canvas.height - margin*2);
-      // oyuncuya çok yakın olmasın
-      const r = 8;
-      while(dist(x,y,player.x,player.y) < 120){ x = margin + Math.random()*(canvas.width - margin*2); y = margin + Math.random()*(canvas.height - margin*2); }
-      return { x, y, r, t: Math.random()*Math.PI*2 }; // t: parıldama fazı
-    }
+  updateCollection();
+  requestAnimationFrame(loop);
+}
 
-    function spawnMonster(){
-      const r = 16;
-      const edge = Math.floor(Math.random()*4);
-      let x,y;
-      // kenarlardan doğsun
-      if(edge===0){ x = Math.random()*canvas.width; y = -40; }
-      else if(edge===1){ x = canvas.width+40; y=Math.random()*canvas.height; }
-      else if(edge===2){ x = Math.random()*canvas.width; y = canvas.height+40; }
-      else { x = -40; y = Math.random()*canvas.height; }
-      const spd = 0.16 + (level-1)*0.02 + Math.random()*0.03; // seviye ile hız artar
-      return { x, y, r, spd, color:'#6d40ff' };
-    }
-
-    // Yardımcılar
-    function dist(x1,y1,x2,y2){ const dx=x2-x1, dy=y2-y1; return Math.hypot(dx,dy); }
-    function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
-
-    // HUD
-    function updateHud(){
-      levelEl.textContent = level;
-      scoreEl.textContent = score;
-      leftEl.textContent  = coins.length;
-      livesEl.textContent = lives;
-    }
-
-    // Oyun döngüsü
-    let _raf;
-    function loop(ts=0){
-      if(!running) return;
-      _raf = requestAnimationFrame(loop);
-      const dt = (ts - last) || 16; // ms
-      last = ts;
-      update(dt);
-      render();
-    }
-
-    // Güncelle
-    function update(dt){
-      // --- Oyuncu hareketi ---
-      const speed = (keys.has('SHIFT')? player.run : player.base) * dt * (canvas.width/1280); // ekranla orantılı
-      let ax = (keys.has('L')?-1:0) + (keys.has('R')?1:0);
-      let ay = (keys.has('U')?-1:0) + (keys.has('D')?1:0);
-      const len = Math.hypot(ax,ay) || 1;
-      player.x += (ax/len)*speed;
-      player.y += (ay/len)*speed;
-      // Sınırlar
-      player.x = clamp(player.x, player.r, canvas.width - player.r);
-      player.y = clamp(player.y, player.r, canvas.height - player.r);
-
-      // --- Coin topla ---
-      for(let i=coins.length-1;i>=0;i--){
-        const c = coins[i];
-        c.t += dt*0.005; // parıldama
-        if(dist(player.x,player.y,c.x,c.y) < player.r + c.r){
-          coins.splice(i,1);
-          score += 10;
+// Kontroller
+document.body.addEventListener('keydown', e=>{
+  switch(e.code){
+    case 'KeyW': keys.w=true; break;
+    case 'KeyS': keys.s=true; break;
+    case 'KeyA': keys.a=true; break;
+    case 'KeyD': keys.d=true; break;
+    case 'ArrowUp': keys.w=true; break;
+    case 'ArrowDown': keys.s=true; break;
+    case 'ArrowLeft': keys.a=true; break;
+    case 'ArrowRight': keys.d=true; break;
+    case 'Space':
+      if(!spacePressed){
+        spacePressed=true;
+        if(!holding){
+          // Yakın nesneye al
+          for(let f of geoData){
+            if(!f.collected && dist(player.lat,player.lng,f.coords[0],f.coords[1]) < PICKUP_RADIUS){
+              holding=f;
+              hudHolding.textContent=f.type;
+              f.marker.setStyle({radius:16,opacity:0.7});
+              break;
+            }
+          }
+        } else {
+          // Nesneyi bırak
+          holding.marker.setStyle({radius:12,opacity:1});
+          holding = null;
+          hudHolding.textContent='Yok';
+          saveData();
+          updateCollection();
         }
       }
+      break;
+  }
+});
+document.body.addEventListener('keyup', e=>{ if(e.code==='Space') spacePressed=false;
+  switch(e.code){ case 'KeyW': keys.w=false; break; case 'KeyS': keys.s=false; break; case 'KeyA': keys.a=false; break; case 'KeyD': keys.d=false; break; case 'ArrowUp': keys.w=false; break; case 'ArrowDown': keys.s=false; break; case 'ArrowLeft': keys.a=false; break; case 'ArrowRight': keys.d=false; break; }});
 
-      // --- Canavarlar oyuncuya kovalama (basit yönelme) ---
-      for(const m of monsters){
-        const dx = player.x - m.x, dy = player.y - m.y;
-        const d = Math.hypot(dx,dy) || 1;
-        const vx = (dx/d) * m.spd * dt * (canvas.width/1280);
-        const vy = (dy/d) * m.spd * dt * (canvas.width/1280);
-        m.x += vx; m.y += vy;
+let player={lat:41.015137,lng:28.979530,spd:0.0008};
 
-        // Çarpışma: oyuncu yakalanırsa can düş
-        if(dist(m.x,m.y,player.x,player.y) < m.r + player.r - 2){
-          loseLife();
-          break;
-        }
-      }
+function loop(){
+  if(keys.w) player.lat+=player.spd;
+  if(keys.s) player.lat-=player.spd;
+  if(keys.a) player.lng-=player.spd;
+  if(keys.d) player.lng+=player.spd;
 
-      // Level bitti mi?
-      if(coins.length===0){
-        level++;
-        score += 100;
-        showOverlay(`Level ${level-1} tamam!`, `Skorun: ${score}`, 'Devam');
-        ovAction.onclick = ()=>{ overlay.style.display='none'; initLevel(level); updateHud(); last=performance.now(); running=true; loop(last); };
-        running=false;
-      }
+  playerMarker.setLatLng([player.lat,player.lng]);
+  map.setView([player.lat,player.lng]);
 
-      updateHud();
+  if(holding) holding.marker.setLatLng([player.lat,player.lng]);
+
+  requestAnimationFrame(loop);
+}
+
+function dist(lat1,lng1,lat2,lng2){return Math.hypot(lat1-lat2,lng1-lng2);}
+
+function updateCollection(){
+  collectionList.innerHTML='';
+  geoData.forEach(f=>{
+    if(f.collected){
+      let li=document.createElement('li');
+      li.textContent=f.type;
+      collectionList.appendChild(li);
     }
+  });
+}
 
-    function loseLife(){
-      lives--;
-      if(lives<=0){
-        showOverlay('Oyun Bitti', `Skorun: <b id="finalScore">${score}</b>`, 'Yeniden Başla');
-        ovAction.onclick = ()=>{ overlay.style.display='none'; startGame(); };
-        running=false;
-      } else {
-        // Bir can kaybında oyuncuyu merkeze, canavarları yeniden ser
-        player.x = canvas.width/2; player.y = canvas.height/2;
-        for(let i=0;i<monsters.length;i++){ monsters[i] = spawnMonster(); }
-      }
-      updateHud();
-    }
-
-    // Çiz
-    function render(){
-      // Arka plan (hafif dokulu)
-      ctx.fillStyle = '#e9f3ff';
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      // grid
-      ctx.globalAlpha = 0.07;
-      ctx.fillStyle = '#000';
-      const grid = 48;
-      for(let x=0;x<canvas.width;x+=grid){ ctx.fillRect(x,0,1,canvas.height); }
-      for(let y=0;y<canvas.height;y+=grid){ ctx.fillRect(0,y,canvas.width,1); }
-      ctx.globalAlpha = 1;
-
-      // Coin’ler (sarı, nefes alan)
-      for(const c of coins){
-        const pulse = 1 + Math.sin(c.t)*0.15;
-        ctx.beginPath(); ctx.arc(c.x, c.y, c.r*pulse, 0, Math.PI*2);
-        ctx.fillStyle = '#ffd84d'; ctx.fill();
-        ctx.lineWidth = 2; ctx.strokeStyle = '#b08700'; ctx.stroke();
-      }
-
-      // Canavarlar
-      for(const m of monsters){
-        ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, Math.PI*2);
-        ctx.fillStyle = m.color; ctx.fill();
-        ctx.lineWidth = 2; ctx.strokeStyle = '#2a1c66'; ctx.stroke();
-        // göz
-        ctx.beginPath(); ctx.arc(m.x-4, m.y-4, 3, 0, Math.PI*2);
-        ctx.arc(m.x+4, m.y-4, 3, 0, Math.PI*2);
-        ctx.fillStyle = '#fff'; ctx.fill();
-      }
-
-      // Oyuncu (butondan dönüşen kırmızı)
-      ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2);
-      ctx.fillStyle = player.color; ctx.fill();
-      ctx.lineWidth = 3; ctx.strokeStyle = '#222'; ctx.stroke();
-    }
-
-    // Overlay
-    function showOverlay(title, desc, actionText){
-      ovTitle.innerHTML = title;
-      ovDesc.innerHTML = desc;
-      ovAction.textContent = actionText;
-      overlay.style.display='grid';
-    }
-  </script>
+function saveData(){
+  try{
+    let safeData=geoData.map(f=>({id:f.id,type:f.type,color:f.color,coords:f.coords,target:f.target,collected:f.collected}));
+    localStorage.setItem('geoItems',JSON.stringify(safeData));
+  }catch(e){ console.warn('LocalStorage kaydedilemedi.',e); }
+}
+</script>
 </body>
 </html>
